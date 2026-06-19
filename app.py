@@ -3,6 +3,7 @@ import pandas as pd
 import joblib
 
 from forecast_utils import recursive_forecast
+from update_data import update_csv
 
 st.set_page_config(page_title="Weather Forecasting System")
 
@@ -12,8 +13,40 @@ st.write("Machine Learning Based Temperature Prediction")
 model = joblib.load("models/temperature_model.pkl")
 feature_names = joblib.load("models/feature_names.pkl")
 
-df = pd.read_csv("data/Palakkad data1.csv", skiprows=2, on_bad_lines="skip")
-df["time"] = pd.to_datetime(df["time"])
+
+@st.cache_data(ttl=3600)  # re-check for new data at most once an hour
+def get_fresh_data():
+    result = update_csv()
+    df = pd.read_csv("data/Palakkad data1.csv", skiprows=2, on_bad_lines="skip")
+    df["time"] = pd.to_datetime(df["time"])
+    return df, result
+
+
+col1, col2 = st.columns([3, 1])
+with col2:
+    if st.button("Refresh data"):
+        st.cache_data.clear()
+
+df, update_result = get_fresh_data()
+
+with col1:
+    if update_result["status"] == "updated":
+        st.success(
+            f"Fetched {update_result['rows_added']} new day(s). "
+            f"Data now current through {update_result['last_date']}."
+        )
+    elif update_result["status"] == "up_to_date":
+        st.info(f"Data is already current through {update_result['last_date']}.")
+    elif update_result["status"] == "no_new_data":
+        st.warning(
+            f"No new data available yet from the weather API "
+            f"(still showing through {update_result['last_date']})."
+        )
+    elif update_result["status"] == "error":
+        st.error(
+            f"Couldn't reach the weather API ({update_result['error']}). "
+            f"Showing existing data through {update_result['last_date']}."
+        )
 
 forecast_df = recursive_forecast(df, model, feature_names, horizon=7)
 
