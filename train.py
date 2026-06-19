@@ -78,7 +78,7 @@ print(
 )
 import joblib
 
-joblib.dump(best_model, "temperature_model.pkl")
-joblib.dump(X.columns.tolist(), "feature_names.pkl")
+joblib.dump(best_model, "models/temperature_model.pkl")
+joblib.dump(X.columns.tolist(), "models/feature_names.pkl")
 
 print("Model saved!")
