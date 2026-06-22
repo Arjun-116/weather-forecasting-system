@@ -51,6 +51,17 @@ with col1:
         )
 
 forecast_df = recursive_forecast(df, mean_model, feature_names, horizon=7)
+max_forecast_df = recursive_forecast(df,max_model,feature_names,horizon=7)
+
+min_forecast_df = recursive_forecast(df,min_model,feature_names,horizon=7)
+
+full_forecast_df = pd.DataFrame({
+    "Date": forecast_df["Date"],
+    "Mean Temp (°C)": forecast_df["Predicted Temperature (°C)"],
+    "Max Temp (°C)": max_forecast_df["Predicted Temperature (°C)"],
+    "Min Temp (°C)": min_forecast_df["Predicted Temperature (°C)"]
+})
+
 X_new = build_tomorrow_features(df, feature_names)
 
 mean_prediction = mean_model.predict(X_new)[0]
@@ -64,25 +75,38 @@ st.subheader(f"Forecast for {next_date}")
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.metric("Mean Temperature",f"{mean_prediction:.2f} °C")
+    st.metric("Mean Temperature", f"{mean_prediction:.2f} °C")
 
 with col2:
-    st.metric("Maximum Temperature",f"{max_prediction:.2f} °C")
+    st.metric("Maximum Temperature", f"{max_prediction:.2f} °C")
 
 with col3:
-    st.metric("Minimum Temperature",f"{min_prediction:.2f} °C")
+    st.metric("Minimum Temperature", f"{min_prediction:.2f} °C")
 
-st.subheader("7-Day Forecast")
-st.caption(
-    "Each day's forecast is generated recursively from the previous day's "
-    "prediction, so accuracy decreases the further out the forecast goes."
-)
-st.dataframe(forecast_df)
+with st.expander("📅 7-Day Forecast", expanded=True):
+
+    st.caption(
+        "Each day's forecast is generated recursively from the previous day's "
+        "prediction, so accuracy decreases the further out the forecast goes."
+    )
+
+    st.dataframe(full_forecast_df)
 
 st.subheader("Recent Temperatures")
 st.line_chart(df.set_index("time")["temperature_2m_mean (°C)"].tail(30))
 
 st.subheader("Latest Weather Records")
-latest_records = df[['time', 'temperature_2m_mean (°C)']].tail(10).copy()
+latest_records = df[[
+    'time',
+    'temperature_2m_mean (°C)',
+    'temperature_2m_max (°C)',
+    'temperature_2m_min (°C)']].tail(10).copy()
 latest_records['time'] = latest_records['time'].dt.date
-st.dataframe(latest_records)
+latest_records = latest_records.rename(columns={
+    'time': 'Date',
+    'temperature_2m_mean (°C)': 'Mean Temp (°C)',
+    'temperature_2m_max (°C)': 'Max Temp (°C)',
+    'temperature_2m_min (°C)': 'Min Temp (°C)'
+})
+with st.expander("Latest Weather Records"):
+    st.dataframe(latest_records)
