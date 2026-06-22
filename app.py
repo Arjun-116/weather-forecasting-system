@@ -91,6 +91,12 @@ with st.expander("📅 7-Day Forecast", expanded=True):
     )
 
     st.dataframe(full_forecast_df)
+    st.line_chart(
+        full_forecast_df.set_index("Date")[
+            ["Mean Temp (°C)",
+             "Max Temp (°C)",
+             "Min Temp (°C)"]
+             ])
 
 st.subheader("Recent Temperatures")
 st.line_chart(df.set_index("time")["temperature_2m_mean (°C)"].tail(30))
