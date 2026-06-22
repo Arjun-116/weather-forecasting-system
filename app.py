@@ -98,6 +98,101 @@ with st.expander("📅 7-Day Forecast", expanded=True):
              "Min Temp (°C)"]
              ])
 
+with st.expander("📊 Historical Forecast Validation", expanded=False):
+
+    test_horizon = 7
+
+    # Use all data except last 7 days for forecasting
+    historical_df = df.iloc[:-test_horizon].copy()
+
+    # Actual values for last 7 days
+    actual_df = df.iloc[-test_horizon:].copy()
+
+    # Generate forecasts
+    mean_backtest = recursive_forecast(
+        historical_df,
+        mean_model,
+        feature_names,
+        horizon=test_horizon
+    )
+
+    max_backtest = recursive_forecast(
+        historical_df,
+        max_model,
+        feature_names,
+        horizon=test_horizon
+    )
+
+    min_backtest = recursive_forecast(
+        historical_df,
+        min_model,
+        feature_names,
+        horizon=test_horizon
+    )
+
+    # Create comparison table
+    comparison_df = pd.DataFrame({
+        "Date": actual_df["time"].dt.date.values,
+
+        "Pred Mean (°C)":
+            mean_backtest["Predicted Temperature (°C)"].round(2),
+
+        "Actual Mean (°C)":
+            actual_df["temperature_2m_mean (°C)"].round(2).values,
+
+        "Pred Max (°C)":
+            max_backtest["Predicted Temperature (°C)"].round(2),
+
+        "Actual Max (°C)":
+            actual_df["temperature_2m_max (°C)"].round(2).values,
+
+        "Pred Min (°C)":
+            min_backtest["Predicted Temperature (°C)"].round(2),
+
+        "Actual Min (°C)":
+            actual_df["temperature_2m_min (°C)"].round(2).values
+    })
+
+    # Errors
+    comparison_df["Mean Error"] = abs(
+        comparison_df["Pred Mean (°C)"] -
+        comparison_df["Actual Mean (°C)"]
+    ).round(2)
+
+    comparison_df["Max Error"] = abs(
+        comparison_df["Pred Max (°C)"] -
+        comparison_df["Actual Max (°C)"]
+    ).round(2)
+
+    comparison_df["Min Error"] = abs(
+        comparison_df["Pred Min (°C)"] -
+        comparison_df["Actual Min (°C)"]
+    ).round(2)
+
+    st.dataframe(comparison_df)
+
+    st.subheader("Backtesting Accuracy")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.metric(
+            "Mean Temp MAE",
+            f"{comparison_df['Mean Error'].mean():.2f} °C"
+        )
+
+    with col2:
+        st.metric(
+            "Max Temp MAE",
+            f"{comparison_df['Max Error'].mean():.2f} °C"
+        )
+
+    with col3:
+        st.metric(
+            "Min Temp MAE",
+            f"{comparison_df['Min Error'].mean():.2f} °C"
+        )
+
 st.subheader("Recent Temperatures")
 st.line_chart(df.set_index("time")["temperature_2m_mean (°C)"].tail(30))
 
