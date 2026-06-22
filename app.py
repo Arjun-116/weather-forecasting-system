@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import joblib
 
-from forecast_utils import recursive_forecast
+from forecast_utils import recursive_forecast, build_tomorrow_features
 from update_data import update_csv
 
 st.set_page_config(page_title="Weather Forecasting System")
@@ -10,7 +10,9 @@ st.set_page_config(page_title="Weather Forecasting System")
 st.title("Weather Forecasting System")
 st.write("Machine Learning Based Temperature Prediction")
 
-model = joblib.load("models/temperature_model.pkl")
+mean_model = joblib.load("models/temperature_model.pkl")
+max_model = joblib.load("models/max_temperature_model.pkl")
+min_model = joblib.load("models/min_temperature_model.pkl")
 feature_names = joblib.load("models/feature_names.pkl")
 
 
@@ -48,11 +50,27 @@ with col1:
             f"Showing existing data through {update_result['last_date']}."
         )
 
-forecast_df = recursive_forecast(df, model, feature_names, horizon=7)
+forecast_df = recursive_forecast(df, mean_model, feature_names, horizon=7)
+X_new = build_tomorrow_features(df, feature_names)
 
-next_date = forecast_df["Date"].iloc[0]
-prediction = forecast_df["Predicted Temperature (°C)"].iloc[0]
-st.metric(f"Predicted Mean Temperature for {next_date}", f"{prediction:.2f} °C")
+mean_prediction = mean_model.predict(X_new)[0]
+max_prediction = max_model.predict(X_new)[0]
+min_prediction = min_model.predict(X_new)[0]
+
+next_date = df["time"].iloc[-1].date() + pd.Timedelta(days=1)
+
+st.subheader(f"Forecast for {next_date}")
+
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    st.metric("Mean Temperature",f"{mean_prediction:.2f} °C")
+
+with col2:
+    st.metric("Maximum Temperature",f"{max_prediction:.2f} °C")
+
+with col3:
+    st.metric("Minimum Temperature",f"{min_prediction:.2f} °C")
 
 st.subheader("7-Day Forecast")
 st.caption(

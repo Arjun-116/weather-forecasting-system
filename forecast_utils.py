@@ -92,3 +92,13 @@ def recursive_forecast(df: pd.DataFrame, model, feature_names: list, horizon: in
         results.append([forecast_date.date(), round(float(pred), 2)])
 
     return pd.DataFrame(results, columns=['Date', 'Predicted Temperature (°C)'])
+
+def build_tomorrow_features(df, feature_names):
+    history = load_history(df)
+    forecast_date = df["time"].iloc[-1] + pd.Timedelta(days=1)
+
+    return build_feature_row(
+        history,
+        forecast_date,
+        feature_names
+    )
