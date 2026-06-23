@@ -196,9 +196,20 @@ with st.expander("📊 Historical Forecast Validation", expanded=False):
             f"{comparison_df['Min Error'].mean():.2f} °C"
         )
 
-st.subheader("Recent Temperatures")
-st.line_chart(df.set_index("time")["temperature_2m_mean (°C)"].tail(30))
+st.subheader("📈 Recent Temperature Trends")
+recent_df = df.set_index("time")[[
+    "temperature_2m_mean (°C)",
+    "temperature_2m_max (°C)",
+    "temperature_2m_min (°C)"
+]].tail(30)
 
+recent_df = recent_df.rename(columns={
+    "temperature_2m_mean (°C)": "Mean Temperature",
+    "temperature_2m_max (°C)": "Maximum Temperature",
+    "temperature_2m_min (°C)": "Minimum Temperature"
+})
+
+st.line_chart(recent_df)
 st.subheader("Latest Weather Records")
 latest_records = df[[
     'time',
