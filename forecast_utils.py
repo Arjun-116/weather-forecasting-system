@@ -63,7 +63,7 @@ def build_feature_row(history: dict, forecast_date: pd.Timestamp, feature_names:
     return pd.DataFrame([feat])[feature_names]
 
 
-def recursive_forecast(df: pd.DataFrame, model, feature_names: list, horizon: int = 7) -> pd.DataFrame:
+def recursive_forecast(df: pd.DataFrame,model,feature_names: list,target_col: str = MEAN_TEMP_COL,horizon: int = 7) -> pd.DataFrame:
     """Forecast `horizon` days ahead, recursively feeding each day's
     predicted mean temperature back into the lag features for the next day.
 
@@ -81,12 +81,12 @@ def recursive_forecast(df: pd.DataFrame, model, feature_names: list, horizon: in
         pred = model.predict(X_new)[0]
 
         # Feed the prediction back in so tomorrow's lag1 = today's forecast
-        history[MEAN_TEMP_COL].append(pred)
+        history[target_col].append(pred)
 
         # We can't forecast these, so persist the last known actual reading
         # purely to keep their lag features defined for later days.
         for col in WEATHER_COLS:
-            if col != MEAN_TEMP_COL:
+            if col != target_col:
                 history[col].append(history[col][-1])
 
         results.append([forecast_date.date(), round(float(pred), 2)])

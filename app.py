@@ -50,10 +50,10 @@ with col1:
             f"Showing existing data through {update_result['last_date']}."
         )
 
-forecast_df = recursive_forecast(df, mean_model, feature_names, horizon=7)
-max_forecast_df = recursive_forecast(df,max_model,feature_names,horizon=7)
+forecast_df = recursive_forecast(df, mean_model, feature_names, target_col='temperature_2m_mean (°C)', horizon=7)
+max_forecast_df = recursive_forecast(df,max_model,feature_names, target_col='temperature_2m_max (°C)', horizon=7)
 
-min_forecast_df = recursive_forecast(df,min_model,feature_names,horizon=7)
+min_forecast_df = recursive_forecast(df,min_model,feature_names, target_col='temperature_2m_min (°C)', horizon=7)
 
 full_forecast_df = pd.DataFrame({
     "Date": forecast_df["Date"],
@@ -113,6 +113,7 @@ with st.expander("📊 Historical Forecast Validation", expanded=False):
         historical_df,
         mean_model,
         feature_names,
+        target_col='temperature_2m_mean (°C)',
         horizon=test_horizon
     )
 
@@ -120,6 +121,7 @@ with st.expander("📊 Historical Forecast Validation", expanded=False):
         historical_df,
         max_model,
         feature_names,
+        target_col='temperature_2m_max (°C)',
         horizon=test_horizon
     )
 
@@ -127,6 +129,7 @@ with st.expander("📊 Historical Forecast Validation", expanded=False):
         historical_df,
         min_model,
         feature_names,
+        target_col='temperature_2m_min (°C)',
         horizon=test_horizon
     )
 
