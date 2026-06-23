@@ -153,7 +153,11 @@ in your browser.
 
 ### Main Dashboard
 
-![Main Dashboard](screenshots/dashboard1.png)(screenshots/dashboard2.png)
+![Main Dashboard](screenshots/dashboard1.png)
+
+### Forecast Dashboard
+
+![Forecast Dashboard](screenshots/dashboard2.png)
 
 ### Historical Forecast Validation
 
