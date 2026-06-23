@@ -147,6 +147,22 @@ in your browser.
 * Recent temperature trends
 * Latest weather records
 
+
+
+## Dashboard Screenshots
+
+### Main Dashboard
+
+![Main Dashboard](screenshots/dashboard1.png)(screenshots/dashboard2.png)
+
+### Historical Forecast Validation
+
+![Historical Validation](screenshots/backtesting.png)
+
+### Temperature Trends
+
+![Temperature Trends](screenshots/trends.png)
+
 ---
 
 ## Future Improvements
