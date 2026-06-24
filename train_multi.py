@@ -26,6 +26,14 @@ df['temp_7day_avg'] = (df['temperature_2m_mean (°C)'].rolling(7).mean())
 
 df['temp_30day_avg'] = (df['temperature_2m_mean (°C)'].rolling(30).mean())
 
+df['max_7day_avg'] = (df['temperature_2m_max (°C)'].rolling(7).mean())
+
+df['max_30day_avg'] = (df['temperature_2m_max (°C)'].rolling(30).mean())
+
+df['min_7day_avg'] = (df['temperature_2m_min (°C)'].rolling(7).mean())
+
+df['min_30day_avg'] = (df['temperature_2m_min (°C)'].rolling(30).mean())
+
 df = df.dropna()
 
 import numpy as np
@@ -38,7 +46,7 @@ df['day_cos'] = np.cos(2 * np.pi * df['dayofyear'] / 365)
 
 df['month_sin'] = np.sin(2 * np.pi * df['month'] / 12)
 df['month_cos'] = np.cos(2 * np.pi * df['month'] / 12)
-X = df.drop(columns=['time','temperature_2m_mean (°C)','temperature_2m_max (°C)','temperature_2m_min (°C)','rain_sum (mm)','wind_speed_10m_max (km/h)', 'month','dayofyear'])
+X = df.drop(columns=['time','temperature_2m_mean (°C)','temperature_2m_max (°C)','temperature_2m_min (°C)','rain_sum (mm)','wind_speed_10m_max (km/h)', 'month','dayofyear', 'max_7day_avg', 'max_30day_avg', 'min_7day_avg', 'min_30day_avg'])
 
 y= df['temperature_2m_mean (°C)']
 split= int(len(df)*0.8)

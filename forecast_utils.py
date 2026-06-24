@@ -59,6 +59,15 @@ def build_feature_row(history: dict, forecast_date: pd.Timestamp, feature_names:
     feat['month_sin'] = np.sin(2 * np.pi * month / 12)
     feat['month_cos'] = np.cos(2 * np.pi * month / 12)
 
+    max_series = history['temperature_2m_max (°C)']
+    min_series = history['temperature_2m_min (°C)']
+
+    feat['max_7day_avg'] = float(np.mean(max_series[-7:]))
+    feat['max_30day_avg'] = float(np.mean(max_series[-30:]))
+
+    feat['min_7day_avg'] = float(np.mean(min_series[-7:]))
+    feat['min_30day_avg'] = float(np.mean(min_series[-30:]))
+
     # Reindex to guarantee the exact column order the model was trained on
     return pd.DataFrame([feat])[feature_names]
 
