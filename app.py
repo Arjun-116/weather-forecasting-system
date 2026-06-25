@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import joblib
+import numpy as np
 
 from forecast_utils import recursive_forecast, build_tomorrow_features
 from update_data import update_csv
@@ -102,56 +103,109 @@ with st.expander("📊 Historical Forecast Validation", expanded=False):
 
     test_horizon = 7
 
-    # Use all data except last 7 days for forecasting
-    historical_df = df.iloc[:-test_horizon].copy()
+    # Create all features exactly as during training
 
-    # Actual values for last 7 days
-    actual_df = df.iloc[-test_horizon:].copy()
+    feature_df = df.copy()
 
-    # Generate forecasts
-    mean_backtest = recursive_forecast(
-        historical_df,
-        mean_model,
-        feature_names,
-        target_col='temperature_2m_mean (°C)',
-        horizon=test_horizon
+    weather_cols = [
+        'temperature_2m_max (°C)',
+        'temperature_2m_min (°C)',
+        'rain_sum (mm)',
+        'wind_speed_10m_max (km/h)',
+        'temperature_2m_mean (°C)'
+    ]
+
+    lags = [1, 2, 3, 7, 14, 30]
+
+    for col in weather_cols:
+        for lag in lags:
+            feature_df[f'{col}_lag{lag}'] = feature_df[col].shift(lag)
+
+    feature_df['temp_7day_avg'] = (
+        feature_df['temperature_2m_mean (°C)'].rolling(7).mean()
     )
 
-    max_backtest = recursive_forecast(
-        historical_df,
-        max_model,
-        feature_names,
-        target_col='temperature_2m_max (°C)',
-        horizon=test_horizon
+    feature_df['temp_30day_avg'] = (
+        feature_df['temperature_2m_mean (°C)'].rolling(30).mean()
     )
 
-    min_backtest = recursive_forecast(
-        historical_df,
-        min_model,
-        feature_names,
-        target_col='temperature_2m_min (°C)',
-        horizon=test_horizon
+    feature_df['max_7day_avg'] = (
+        feature_df['temperature_2m_max (°C)'].rolling(7).mean()
     )
 
-    # Create comparison table
+    feature_df['max_30day_avg'] = (
+        feature_df['temperature_2m_max (°C)'].rolling(30).mean()
+    )
+
+    feature_df['min_7day_avg'] = (
+        feature_df['temperature_2m_min (°C)'].rolling(7).mean()
+    )
+
+    feature_df['min_30day_avg'] = (
+        feature_df['temperature_2m_min (°C)'].rolling(30).mean()
+    )
+
+    feature_df["month"] = feature_df['time'].dt.month
+    feature_df["dayofyear"] = feature_df['time'].dt.dayofyear
+
+    feature_df['day_sin'] = np.sin(
+        2 * np.pi * feature_df['dayofyear'] / 365
+    )
+
+    feature_df['day_cos'] = np.cos(
+        2 * np.pi * feature_df['dayofyear'] / 365
+    )
+
+    feature_df['month_sin'] = np.sin(
+        2 * np.pi * feature_df['month'] / 12
+    )
+
+    feature_df['month_cos'] = np.cos(
+        2 * np.pi * feature_df['month'] / 12
+    )
+
+    feature_df = feature_df.dropna()
+
+    # Use the last 7 days for validation
+    actual_df = feature_df.tail(test_horizon).copy()
+
+    mean_preds = []
+    max_preds = []
+    min_preds = []
+
+    # Predict each day using ACTUAL historical data
+    for _, row in actual_df.iterrows():
+
+        X_test = pd.DataFrame(
+            [row[feature_names].values],
+            columns=feature_names
+        )
+
+        mean_preds.append(
+            round(mean_model.predict(X_test)[0], 2)
+        )
+
+        max_preds.append(
+            round(max_model.predict(X_test)[0], 2)
+        )
+
+        min_preds.append(
+            round(min_model.predict(X_test)[0], 2)
+        )
+
+    # Comparison table
     comparison_df = pd.DataFrame({
         "Date": actual_df["time"].dt.date.values,
 
-        "Pred Mean (°C)":
-            mean_backtest["Predicted Temperature (°C)"].round(2),
-
+        "Pred Mean (°C)": mean_preds,
         "Actual Mean (°C)":
             actual_df["temperature_2m_mean (°C)"].round(2).values,
 
-        "Pred Max (°C)":
-            max_backtest["Predicted Temperature (°C)"].round(2),
-
+        "Pred Max (°C)": max_preds,
         "Actual Max (°C)":
             actual_df["temperature_2m_max (°C)"].round(2).values,
 
-        "Pred Min (°C)":
-            min_backtest["Predicted Temperature (°C)"].round(2),
-
+        "Pred Min (°C)": min_preds,
         "Actual Min (°C)":
             actual_df["temperature_2m_min (°C)"].round(2).values
     })

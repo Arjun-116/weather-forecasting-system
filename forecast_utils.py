@@ -111,3 +111,23 @@ def build_tomorrow_features(df, feature_names):
         forecast_date,
         feature_names
     )
+
+def backtest_actual(df, model, feature_names, target_col, horizon=7):
+
+    predictions = []
+
+    # Take the last 'horizon' rows
+    test_df = df.tail(horizon).copy()
+
+    for _, row in test_df.iterrows():
+
+        X_test = pd.DataFrame(
+            [row[feature_names].values],
+            columns=feature_names
+        )
+
+        pred = model.predict(X_test)[0]
+
+        predictions.append(round(float(pred), 2))
+
+    return predictions
