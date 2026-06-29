@@ -80,19 +80,19 @@ coef_df = pd.DataFrame({
     "Coefficient": best_model.coef_
 })
 
-print(
+'''print(
     coef_df.sort_values(
         by="Coefficient",
         key=lambda s: abs(s),
         ascending=False
     )
-)
+)'''
 import joblib
 
 joblib.dump(best_model, "models/temperature_model.pkl")
 joblib.dump(X.columns.tolist(), "models/feature_names.pkl")
 
-print("Model saved!")
+print("Mean Temperature Model saved!")
 
 # ---------------- MAX TEMPERATURE MODEL ----------------
 
